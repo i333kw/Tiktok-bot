@@ -15,7 +15,8 @@ SUCCESS = "tam altahmeel bidun alamah maiah"
 
 FAIL = "hatha khata, taked min alrabat wa hawal mujadadan"
 
-PLATFORMS = ["tiktok.com","instagram.com","youtube.com","youtu.be","twitter.com","x.com","t.co"]
+PLATFORMS = ["tiktok.com","instagram.com","youtube.com","youtu.be","twitter.com","x.com","t.co","vxtwitter.com","fxtwitter.com","https://"]
+
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await update.message.reply_text(WELCOME)
