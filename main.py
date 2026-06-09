@@ -5,33 +5,21 @@ from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, fil
 
 TOKEN = os.environ.get("TOKEN")
 
+WELCOME = "ahlan! \n\narsil rabat min:\nTikTok\nInstagram\nYouTube\nX (Twitter)\n\nsa-ursil lak alfideo bidun alamah!"
+
+ERROR_MSG = "rabat ghair madfoom, taked min alsahih"
+
+DOWNLOADING = "jari altahmeel..."
+
+SUCCESS = "tam altahmeel bidun alamah maiah"
+
+FAIL = "hatha khata, taked min alrabat wa hawal mujadadan"
+
+PLATFORMS = ["tiktok.com","instagram.com","youtube.com","youtu.be","twitter.com","x.com","t.co"]
+
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    name = update.effective_user.first_name
-    await update.message.reply_text(
-        f"👋 أهلاً {name}!\n\n"
-        "🎬 أرسل لي رابط فيديو من:\n\n"
-        "🎵 TikTok\n"
-        "📸 Instagram\n"
-        "▶️ YouTube\n"
-        "🐦 X (تويتر)\n\n"
-        "وسأرسل لك الفيديو للحفظ بدون علامة مائية فوراً! 🚀"
-    )
+    await update.message.reply_text(WELCOME)
 
 async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
-
-    platforms = [
-        "tiktok.com",
-        "instagram.com",
-        "youtube.com",
-        "youtu.be",
-        "twitter.com",
-        "x.com",
-        "t.co"
-    ]
-
-    if not any(x in url for x in platforms):
-        await update.message.reply_text(
-            "❌ رابط غير مدعوم\n\n"
-            "المنصات المدعومة:\n"
-            "
+    
