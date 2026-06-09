@@ -1,38 +1,33 @@
 import os
-import asyncio
 import yt_dlp
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
 
 TOKEN = os.environ.get("TOKEN")
-PLATFORMS = ["tiktok.com","instagram.com","youtube.com","youtu.be","twitter.com","x.com","t.co"]
-
-async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text("ahlan! arsil rabat min TikTok / Instagram / YouTube / X")
-
-def do_download(url):
-    opts = {'outtmpl': '/tmp/%(id)s.%(ext)s','format': 'mp4','noplaylist': True,'socket_timeout': 30}
-    with yt_dlp.YoutubeDL(opts) as ydl:
-        info = ydl.extract_info(url, download=True)
-        return "/tmp/" + info['id'] + ".mp4"
 
 async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
-    if not any(x in url for x in PLATFORMS):
-        await update.message.reply_text("rabat ghair madfoom")
+    if "tiktok.com" not in url:
+        await update.message.reply_text("❌ أرسل رابط TikTok صحيح")
         return
-    await update.message.reply_text("jari altahmeel...")
+
+    await update.message.reply_text("⏳ جاري التحميل...")
+
     try:
-        loop = asyncio.get_event_loop()
-        file_path = await asyncio.wait_for(loop.run_in_executor(None, do_download, url), timeout=60)
-        await update.message.reply_video(video=open(file_path, 'rb'), caption="tam!")
+        ydl_opts = {
+            'outtmpl': '/tmp/%(id)s.%(ext)s',
+            'format': 'mp4',
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            file_path = f"/tmp/{info['id']}.mp4"
+
+        await update.message.reply_video(video=open(file_path, 'rb'))
         os.remove(file_path)
-    except asyncio.TimeoutError:
-        await update.message.reply_text("waqt taweel, hawal mujadadan")
-    except Exception:
-        await update.message.reply_text("khata fil tahmeel, taked min alrabat")
+
+    except Exception as e:
+        await update.message.reply_text("❌ حدث خطأ، تأكد من الرابط")
 
 app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(CommandHandler("start", start))
 app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download))
 app.run_polling()
