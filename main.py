@@ -1,26 +1,48 @@
 import os
+import asyncio
 import yt_dlp
 from telegram import Update
 from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
 
 TOKEN = os.environ.get("TOKEN")
 
-WELCOME = "ahlan! \n\narsil rabat min:\nTikTok\nInstagram\nYouTube\nX (Twitter)\n\nsa-ursil lak alfideo bidun alamah!"
-
-ERROR_MSG = "rabat ghair madfoom, taked min alsahih"
-
-DOWNLOADING = "jari altahmeel..."
-
-SUCCESS = "tam altahmeel bidun alamah maiah"
-
-FAIL = "hatha khata, taked min alrabat wa hawal mujadadan"
-
-PLATFORMS = ["tiktok.com","instagram.com","youtube.com","youtu.be","twitter.com","x.com","t.co","vxtwitter.com","fxtwitter.com","https://"]
-
+PLATFORMS = ["tiktok.com","instagram.com","youtube.com","youtu.be","twitter.com","x.com","t.co"]
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    await update.message.reply_text(WELCOME)
+    await update.message.reply_text(
+        "ahlan! arsil rabat min:\n"
+        "TikTok / Instagram / YouTube / X"
+    )
 
 async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
-    
+
+    if not any(x in url for x in PLATFORMS):
+        await update.message.reply_text("rabat ghair madfoom")
+        return
+
+    msg = await update.message.reply_text("jari altahmeel...")
+
+    def do_download():
+        ydl_opts = {
+            'outtmpl': '/tmp/%(id)s.%(ext)s',
+            'format': 'mp4',
+            'noplaylist': True,
+            'socket_timeout': 30,
+        }
+        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            return "/tmp/" + info['id'] + ".mp4"
+
+    try:
+        loop = asyncio.get_event_loop()
+        file_path = await asyncio.wait_for(
+            loop.run_in_executor(None, do_download),
+            timeout=60
+        )
+        await update.message.reply_video(
+            video=open(file_path, 'rb'),
+            caption="tam altahmeel!"
+        )
+        os.remove(file_path)
+        await msg.delete
