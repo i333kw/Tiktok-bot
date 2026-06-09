@@ -1,33 +1,37 @@
 import os
 import yt_dlp
 from telegram import Update
-from telegram.ext import ApplicationBuilder, MessageHandler, filters, ContextTypes
+from telegram.ext import ApplicationBuilder, MessageHandler, CommandHandler, filters, ContextTypes
 
 TOKEN = os.environ.get("TOKEN")
 
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    name = update.effective_user.first_name
+    await update.message.reply_text(
+        f"👋 أهلاً {name}!\n\n"
+        "🎬 أرسل لي رابط فيديو من:\n\n"
+        "🎵 TikTok\n"
+        "📸 Instagram\n"
+        "▶️ YouTube\n"
+        "🐦 X (تويتر)\n\n"
+        "وسأرسل لك الفيديو للحفظ بدون علامة مائية فوراً! 🚀"
+    )
+
 async def download(update: Update, context: ContextTypes.DEFAULT_TYPE):
     url = update.message.text
-    if "tiktok.com" not in url:
-        await update.message.reply_text("❌ أرسل رابط TikTok صحيح")
-        return
 
-    await update.message.reply_text("⏳ جاري التحميل...")
+    platforms = [
+        "tiktok.com",
+        "instagram.com",
+        "youtube.com",
+        "youtu.be",
+        "twitter.com",
+        "x.com",
+        "t.co"
+    ]
 
-    try:
-        ydl_opts = {
-            'outtmpl': '/tmp/%(id)s.%(ext)s',
-            'format': 'mp4',
-        }
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(url, download=True)
-            file_path = f"/tmp/{info['id']}.mp4"
-
-        await update.message.reply_video(video=open(file_path, 'rb'))
-        os.remove(file_path)
-
-    except Exception as e:
-        await update.message.reply_text("❌ حدث خطأ، تأكد من الرابط")
-
-app = ApplicationBuilder().token(TOKEN).build()
-app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, download))
-app.run_polling()
+    if not any(x in url for x in platforms):
+        await update.message.reply_text(
+            "❌ رابط غير مدعوم\n\n"
+            "المنصات المدعومة:\n"
+            "
